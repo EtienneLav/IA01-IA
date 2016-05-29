@@ -1,0 +1,154 @@
+﻿Quelques rappel pour le TD n°5 : 
+
+
+Un système expert est composé de trois entités distinctes :
+
+une base de règles, 
+une base de faits et 
+un moteur d'ordre (soit 0 ou 0+ ou encore 1)
+
+Le moteur d'ordre 0 est un moteur composé de différents faits binaires
+
+
+Un moteur d'ordre 0+, quand à lui est un moteur composé de faits qui comportent des valeurs
+
+Enfin, un moteur d'ordre 1 est un moteur d'inférence utilisant des variables ($)
+
+
+
+Le chainage avant : 
+
+Principe :  on part de la base de fait pour aller au but défini et connu,
+
+
+Le chainage arrière : 
+
+Principe :  on part du but que l'on connait, puis on revient aux faits
+
+Fonction de chainage arrière :
+
+Fonction chainage_arriere (base_de_faits base_de_règles but_a_atteindre)
+
+
+Les variables chemins sont des listes alors que les premisses, des booléens
+
+Algorithme de recherche de pré-conception de la fonction LISP : 
+
+debut_algo
+
+  si but_a_atteindre appartient à base_de_faits alors
+    retourner vrai
+  fin si
+  
+  fonction_reinitialiser chemins
+
+  Pour chaque regle dans base_de_règles
+    si but_a_atteindre appartient à conclusion de regle alors
+      ajouter règle à chemins
+    fin si
+  fin pour
+  
+  si chemins différents de vide alors
+    Pour chaque regle dans chemins
+      premisse <- vrai
+      pour chaque p dans prémisses de regle
+        si non chainage_arriere(base_de_faits base_de_règles p) alors
+          premisse <- faux
+        fin si
+      fin pour
+      
+      si premisse = vrai alors
+        retourner vrai
+      fin si
+    fin pour
+  fin si
+  
+  retourner faux
+
+fin_algo
+
+
+Remarque concernant la base de faits : Nous associerons dans notre représentation une lette à un fait et l'on fera une
+liste qui représentera la base tout entière.
+
+En implémentation LISP nous aurions :
+
+
+
+(setq base_de_faits '(E F))
+
+
+Remarque concernant la base de règles : Nous associerons une liste qui représentera les prémisses
+d'une règle à une seconde liste qui, quand à elle, représentera les conclusions de ces règles
+et ses associations seront stockées dans une liste qui sera la base_de_règles
+
+Pour cet exemple : 
+
+
+B et D et Z → M
+D et G → A
+C et F → A
+C → D
+D → E
+T → H
+B → X
+X et C → T
+
+La représentation LISP équivalente serait : 
+
+(setq base_de_regle '(((B D Z) (M))
+           ((D G) (T))
+           ((C F) (T))
+           ((C) (D))
+           ((D) (E))
+           ((T) (H))
+           ((B) (X))
+           ((X C) (T))
+          )
+)
+
+Voici la fonction LISP à poprement parlé
+
+(defun chainage_arriere (base_de_faits base_de_regles but_a_atteindre)
+
+  (let ((chemins nil) (prem T) (reussi nil))
+    (if (member but_a_atteindre base_de_faits)
+      (setq reussi T)
+
+      (progn
+        (loop for reg in base_de_regles do
+          (if (member but_a_atteindre (cadr reg))
+            (push reg chemins)
+          )
+        )
+        (if chemins
+          (loop for reg in chemins do
+            (setq premiss T)
+            (loop for premiss in (car reg) do
+              (if (not (chainage_arriere base_de_faits (remove reg base_de_regles) p))
+                (setq pre nil)
+              )
+            )
+            (if premiss
+              (setq reussi T)
+            )
+          )
+        )
+      )
+    )
+    'Success
+  )
+)
+Pour tester l'implémentation LISP : 
+
+
+(chainage_arriere base_de_faits base_de_regles 'H) renverra T
+
+(setq base_de_regles2 '(((B D E) (z))
+           ((C) (D))
+           ((D) (E))
+           ((t) (H))
+           ((B) (X))
+          )
+)
+Au contraire : l'exemple suivant : (chainage_arriere base_de_faits base_deregles2 'H) renverra NIL
